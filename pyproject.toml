@@ -19,3 +19,23 @@ build-backend = "uv_build"
 
 [project.scripts]
 teicli = "teisatsu.core._cli:run_teisatsu"
+
+
+[project.optional-dependencies]
+domain = ["python-whois"]
+credit_card = []
+email = []
+iban = []
+ip = []
+url = []
+
+
+all = [
+    "teisatsu[domain]",
+    "teisatsu[credit_card]",
+    "teisatsu[email]",
+    "teisatsu[iban]",
+    "teisatsu[ip]",
+    "teisatsu[url]",
+
+]
