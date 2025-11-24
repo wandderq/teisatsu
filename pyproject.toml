@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "colorlog>=6.10.1",
+    "validators>=0.35.0",
 ]
 
 [build-system]
@@ -16,3 +17,5 @@ requires = ["uv_build>=0.9.7,<0.10.0"]
 build-backend = "uv_build"
 
 
+[project.scripts]
+teicli = "teisatsu.core._cli:run_teisatsu"
