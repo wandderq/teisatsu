@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from typing import Any
+
 import logging as lg
 
 
@@ -14,5 +16,5 @@ class TeisatsuScript(ABC):
     
     
     @abstractmethod
-    def run(self) -> None | int:
+    def run(self, thing: Any) -> dict[str, Any]:
         ...

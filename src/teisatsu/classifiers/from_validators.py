@@ -39,8 +39,8 @@ def is_domain(thing: Any) -> bool | str:
 
 
 # tag: hostname
-def is_hostname(thing: Any) -> bool | str:
-    return 'tag' if (validators.hostname(thing) == True) else False
+# def is_hostname(thing: Any) -> bool | str:
+#     return 'tag' if (validators.hostname(thing) == True) else False
 
 
 # tag: mac_address

@@ -1,23 +1,26 @@
-from .groups import TAGS
+from ..core.groups import TAGS
 from typing import Any
+
+import logging as lg
 
 
 class ClassifierError(Exception):
-    ...
+    pass
 
 class TeisatsuClassifier:
     def __init__(self, thing: Any) -> None:
+        self.logger = lg.getLogger('teisatsu.classifier')
         self.thing = thing
     
     
-    def classify(self, raise_exception = False) -> list[str]:
+    def classify(self) -> list[str]:
         thing_tags = []
         
         for tag in TAGS:
             if tag['func'](self.thing):
                 thing_tags.append(tag['name'])
         
-        if raise_exception and not thing_tags:
-            raise ClassifierError(f'Failed to classificate: {self.thing}')
+        if not thing_tags:
+            self.logger.error(f'Failed to classificate: {self.thing}')
         
         return thing_tags
