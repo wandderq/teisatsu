@@ -19,7 +19,7 @@ SCRIPTS = [
         'name': script.TSS_NAME,
         'tags': script.TSS_TAGS,
         'requirements': script.TSS_REQUIREMENTS,
-        'object': script.TSS_OBJECT
+        'class': script.TSS_CLASS
     }
     for script in scripts.scripts_list
 ]

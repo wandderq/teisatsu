@@ -1,10 +1,12 @@
 from argparse import ArgumentParser
+# from pprint import pprint
 # from ..core.classifier import TeisatsuClassifier
 
 import colorlog as clg
 import logging as lg
+import json
 import sys
-import os
+# import os
 
 
 def fprint(s: str='', end: str='\n') -> None:
@@ -110,7 +112,7 @@ class TeisatsuCLI:
             logger.debug(f'Classified tags: {tags}')
             
             
-            # gathering information (running scripts)
+            # gathering scripts
             logger.info('Getting scripts')
             manager = TeisatsuScriptManager()
             scripts = manager.get_scripts(tags)
@@ -118,6 +120,15 @@ class TeisatsuCLI:
             logger.debug(f'Match scripts: {[s['name'] for s in scripts]}')
             
             
+            # running scripts (gathering information)
+            logger.info('Running scripts')
+            raw_info = manager.run_scripts(thing, scripts)
+            
+            print(json.dumps(
+                raw_info,
+                ensure_ascii=False,
+                indent=4
+            ), flush=True)
             
             # summaring information
             ...

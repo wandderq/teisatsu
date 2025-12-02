@@ -1,8 +1,9 @@
 from ..core.groups import SCRIPTS
 from typing import Any
+from collections import defaultdict
 
 import logging as lg
-
+import time
 
 class TeisatsuScriptManager:
     def __init__(self) -> None:
@@ -23,3 +24,24 @@ class TeisatsuScriptManager:
             self.logger.error(f'No matches found for \'{", ".join(tags)}\' tags')
         
         return matches
+    
+    
+    def run_scripts(self, thing: Any, scripts: list[dict[str, Any]]) -> dict[str, Any]:
+        info = defaultdict(dict)
+        
+        for script in scripts:
+            name = script['name']
+            tags = script['tags']
+            cls = script['class']
+            requirements = script['requirements']
+            
+            # launching & timeit
+            self.logger.info(f'Launching script: {name}')
+            start = time.time()
+            data = cls().run(thing)
+            elapsed = time.time() - start
+            self.logger.debug(f'Script {name} took {elapsed:.4f}s')
+            
+            info[name].update(data)
+        
+        return info

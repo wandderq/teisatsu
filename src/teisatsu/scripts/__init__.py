@@ -7,7 +7,7 @@ _TSS_REQUIRED_ATTRS= [
     'TSS_NAME',
     'TSS_TAGS',
     'TSS_REQUIREMENTS',
-    'TSS_OBJECT'
+    'TSS_CLASS'
 ]
 
 logger = lg.getLogger('teisatsu.scripts.init')

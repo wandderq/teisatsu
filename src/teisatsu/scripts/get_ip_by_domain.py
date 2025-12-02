@@ -18,4 +18,4 @@ class GetDomainScript(TeisatsuScript):
 TSS_NAME = 'get-ip-by-domain'
 TSS_TAGS = ['domain']
 TSS_REQUIREMENTS = []
-TSS_OBJECT = GetDomainScript()
+TSS_CLASS = GetDomainScript
