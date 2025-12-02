@@ -1,5 +1,7 @@
 from typing import Any
-from ..core.scripts import TeisatsuScript
+from ..core.script import TeisatsuScript
+
+import socket
 
 
 class GetDomainScript(TeisatsuScript):
@@ -8,7 +10,8 @@ class GetDomainScript(TeisatsuScript):
     
     
     def run(self, thing: Any) -> dict[str, Any]:
-        return {'thing': thing}
+        addr = socket.gethostbyname(thing)
+        return {'thing': thing, 'ipv4-addr': addr}
 
 
 # Teisatsu Script Configuration

@@ -95,12 +95,15 @@ class TeisatsuCLI:
         
         if args.command == 'find':
             from ..core.classifier import TeisatsuClassifier
+            from ..core.manager import TeisatsuScriptManager
             
             # parsing thing
             thing = str(args.thing).strip()
             logger.debug(f'Thing: {thing}')
             
+            
             # classifying
+            logger.info('Classifying thing')
             classifier = TeisatsuClassifier(thing)
             tags = classifier.classify()
             if not tags: return 1
@@ -108,7 +111,12 @@ class TeisatsuCLI:
             
             
             # gathering information (running scripts)
-            ...
+            logger.info('Getting scripts')
+            manager = TeisatsuScriptManager()
+            scripts = manager.get_scripts(tags)
+            if not scripts: return 1
+            logger.debug(f'Match scripts: {[s['name'] for s in scripts]}')
+            
             
             
             # summaring information

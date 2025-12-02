@@ -1,1 +1,2 @@
 - `-I` flag to ignore specific tags, like `-I hostname,iban`
+- recursive scripts scan (add function to \_\_init\_\_.py file and run it with every subpacket, starting with \_\_path\_\_)
