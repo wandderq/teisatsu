@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-# from pprint import pprint
+from pprint import pprint
 # from ..core.classifier import TeisatsuClassifier
 
 import colorlog as clg
@@ -98,6 +98,7 @@ class TeisatsuCLI:
         if args.command == 'find':
             from ..core.classifier import TeisatsuClassifier
             from ..core.manager import TeisatsuScriptManager
+            from ..core.info import TeisatsuInfoProcessor
             
             # parsing thing
             thing = str(args.thing).strip()
@@ -124,14 +125,23 @@ class TeisatsuCLI:
             logger.info('Running scripts')
             raw_info = manager.run_scripts(thing, scripts)
             
-            print(json.dumps(
-                raw_info,
-                ensure_ascii=False,
-                indent=4
-            ), flush=True)
+            # print(json.dumps(
+            #     raw_info,
+            #     ensure_ascii=False,
+            #     indent=4
+            # ), flush=True)
             
             # summaring information
-            ...
+            logger.info('Summaring raw information')
+            info_processor = TeisatsuInfoProcessor(raw_info)
+            info = info_processor.summary()
+            
+            # print(json.dumps(
+            #     info,
+            #     ensure_ascii=False,
+            #     indent=4
+            # ), flush=True)
+            pprint(info, indent=4)
             
             
             # showing & saving results
