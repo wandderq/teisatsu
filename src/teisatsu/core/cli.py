@@ -1,26 +1,24 @@
-from argparse import ArgumentParser
-from pprint import pprint
-# from ..core.classifier import TeisatsuClassifier
+from argparse import ArgumentParser, Namespace
+from pathlib import Path
 
 import colorlog as clg
 import logging as lg
-import json
 import sys
-# import os
+import os
 
-
-def fprint(s: str='', end: str='\n') -> None:
-    sys.stdout.write(f'{s}{end}')
+def fprint(s: str='', end: str='\n'):
+    sys.stdout.write(str(s) + str(end))
     sys.stdout.flush()
+
 
 class TeisatsuCLI:
     def __init__(self) -> None:
-        self.argparaser = ArgumentParser(
-            description='will find everything',
-            epilog='see wandderq/teisatsu (github)'
+        self.argparser = ArgumentParser(
+            description='will find everything (almost)',
+            epilog='see https://github.com/wandderq/teisatsu'
         )
         
-        subparsers = self.argparaser.add_subparsers(
+        subparsers = self.argparser.add_subparsers(
             dest='command',
             help='teisatsu command',
             metavar='[command]',
@@ -28,42 +26,35 @@ class TeisatsuCLI:
         )
         
         # find command parser
-        find_parser = subparsers.add_parser(
-            'find',
-            help='find anyTHING'
-        )
-        
+        find_parser = subparsers.add_parser('find', help='find anyTHING')
+        find_parser.add_argument('thing', help='search request')
         find_parser.add_argument(
-            'thing',
-            help='what we\'re searching about'
-        )
-        
-        # list command parser
-        list_parser = subparsers.add_parser(
-            'list',
-            help='shows available things'
-        )
-        
-        list_parser.add_argument(
-            'object',
-            choices=['tags', 'scripts'],
-            help='shows available [object]'
-        )
-        
-        # global args
-        self.argparaser.add_argument(
             '-v', '--verbose',
             action='store_true',
             help='verbose mode'
         )
+        
+        # list command parser
+        list_parser = subparsers.add_parser('list', help='shows available things')
+        list_parser.add_argument(
+            'object',
+            choices=['tags', 'scripts'],
+            help='displays the available [object]'
+        )
+        
     
-    
-    def setup_logger(self, level: int) -> lg.Logger:
+    def __setup_logger(self, level: int) -> lg.Logger:
+        self.logfile_path = Path('~/.local/tmp/teisatsu.log').expanduser()
+        self.logfile_path.parent.mkdir(parents=True, exist_ok=True)
+        self.logfile_path.touch(exist_ok=True)
+        
+        
         root_logger = lg.getLogger('teisatsu')
         root_logger.handlers.clear()
-        root_logger.setLevel(level)
+        root_logger.setLevel(lg.DEBUG)
         
-        stream_handler = clg.StreamHandler(stream=sys.stdout)
+        stream_handler = lg.StreamHandler(stream=sys.stdout)
+        stream_handler.setLevel(level=level)
         stream_handler.setFormatter(clg.ColoredFormatter(
             fmt="[{name} - {log_color}{levelname}{reset}]: {message}",
             style='{',
@@ -75,90 +66,53 @@ class TeisatsuCLI:
             }
         ))
         
+        file_handler = lg.FileHandler(str(self.logfile_path), mode='a', encoding='utf-8')
+        file_handler.setFormatter(lg.Formatter(
+            fmt="[{asctime} - {levelname} - {name}]: {message}",
+            style='{'
+        ))
+        
         root_logger.addHandler(stream_handler)
+        root_logger.addHandler(file_handler)
         
         return lg.getLogger('teisatsu.cli')
-        
     
-    def show_tags(self) -> None:
-        from ..core.groups import TAGS
-        fprint(f'Availavble tags: {len(TAGS)}')
-        show = not (input('show? y/n: ').strip().lower() in ['n', 'no'])
-        
-        if show:
-            fprint()
-            for i, tag in enumerate([t['name'] for t in TAGS], start=1):
-                fprint(f'{i}: {tag}')
-        
+    
+    def __find_thing(self, args: Namespace) -> None | int:
+        ...
+    
+    
+    def __display_available_tags(self) -> None:
+        ...
+    
+    
+    def __display_available_scripts(self) -> None:
+        ...
+    
     
     def run(self) -> None | int:
-        args = self.argparaser.parse_args()
-        logger = self.setup_logger(lg.DEBUG if args.verbose else lg.INFO)
+        args = self.argparser.parse_args()
+        logger = self.__setup_logger(lg.DEBUG if args.verbose else lg.INFO)
+        
+        logger.debug(f'CLI launched. Executing command: {args.command}')
         
         if args.command == 'find':
-            from ..core.classifier import TeisatsuClassifier
-            from ..core.manager import TeisatsuScriptManager
-            from ..core.info import TeisatsuInfoProcessor
-            
-            # parsing thing
-            thing = str(args.thing).strip()
-            logger.debug(f'Thing: {thing}')
-            
-            
-            # classifying
-            logger.info('Classifying thing')
-            classifier = TeisatsuClassifier(thing)
-            tags = classifier.classify()
-            if not tags: return 1
-            logger.debug(f'Classified tags: {tags}')
-            
-            
-            # gathering scripts
-            logger.info('Getting scripts')
-            manager = TeisatsuScriptManager()
-            scripts = manager.get_scripts(tags)
-            if not scripts: return 1
-            logger.debug(f'Match scripts: {[s['name'] for s in scripts]}')
-            
-            
-            # running scripts (gathering information)
-            logger.info('Running scripts')
-            raw_info = manager.run_scripts(thing, scripts)
-            
-            # print(json.dumps(
-            #     raw_info,
-            #     ensure_ascii=False,
-            #     indent=4
-            # ), flush=True)
-            
-            # summaring information
-            logger.info('Summaring raw information')
-            info_processor = TeisatsuInfoProcessor(raw_info)
-            info = info_processor.summary()
-            
-            # print(json.dumps(
-            #     info,
-            #     ensure_ascii=False,
-            #     indent=4
-            # ), flush=True)
-            pprint(info, indent=4)
-            
-            
-            # showing & saving results
-            ...
-            
+            returncode = self.__find_thing(args)
+            return returncode
         
-        
+            
         elif args.command == 'list':
+            logger.debug(f'Displaying the available {args.object}')
             if args.object == 'tags':
-                self.show_tags()
+                self.__display_available_tags()
+                return 0
             
             if args.object == 'scripts':
-                ...
+                self.__display_available_scripts()
+                return 0
 
 
 
-def launch_cli() -> None:
-    cli = TeisatsuCLI()
-    exitcode = cli.run()
-    sys.exit(0 if not exitcode else exitcode)
+def launch_cli():
+    exitcode = TeisatsuCLI().run() 
+    sys.exit(exitcode)

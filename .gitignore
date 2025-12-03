@@ -215,5 +215,8 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# teitests
+# teisatsu old templates
 .teitests
+
+# debugging
+debug.py
