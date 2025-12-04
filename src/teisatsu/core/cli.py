@@ -130,7 +130,7 @@ class TeisatsuCLI:
     def run(self) -> None | int:
         args = self.argparser.parse_args()
         
-        self.setup_logger(lg.DEBUG if args.verbose else lg.INFO)
+        self.setup_logger(lg.DEBUG if hasattr(args, 'verbose') and args.verbose else lg.INFO)
         self.logger.debug(f'CLI launched. Executing command: {args.command}')
         
         if args.command == 'find':
