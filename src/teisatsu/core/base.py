@@ -10,10 +10,13 @@ class TScriptError(Exception):
 
 class TScriptBase(ABC):
     @abstractmethod
-    def __init__(self, name: str, tags: list[str], requirements: list[str]) -> None:
-        self.name = name
-        self.tags = tags
-        self.requirements = requirements
+    def __init__(self, script_globals: dict) -> None:
+        
+        self.name = script_globals['TSS_NAME']
+        self.tags = script_globals['TSS_TAGS']
+        self.version = script_globals['TSS_VERSION']
+        self.description = script_globals['TSS_DESCRIPTION']
+        self.requirements = script_globals['TSS_REQUIREMENTS']
         
         self.name = str(self.name).strip().replace(' ', '-').replace('_', '-')
         self.logger = lg.getLogger(f'teisatsu.script.{self.name.lower()}')

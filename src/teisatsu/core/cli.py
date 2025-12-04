@@ -3,6 +3,7 @@ from pathlib import Path
 
 import colorlog as clg
 import logging as lg
+import json
 import sys
 import os
 
@@ -27,7 +28,13 @@ class TeisatsuCLI:
         
         # find command parser
         find_parser = subparsers.add_parser('find', help='find anyTHING')
-        find_parser.add_argument('thing', help='search request')
+        find_parser.add_argument('thing', help='search request', nargs='+', type=str)
+        find_parser.add_argument(
+            '-s', '--separator',
+            type=str,
+            default=' ',
+            help='separator between args.things, like sep.join(thing)'
+        )
         find_parser.add_argument(
             '-v', '--verbose',
             action='store_true',
@@ -41,9 +48,9 @@ class TeisatsuCLI:
             choices=['tags', 'scripts'],
             help='displays the available [object]'
         )
-        
     
-    def __setup_logger(self, level: int) -> lg.Logger:
+    
+    def setup_logger(self, level: int) -> None:
         self.logfile_path = Path('~/.local/tmp/teisatsu.log').expanduser()
         self.logfile_path.parent.mkdir(parents=True, exist_ok=True)
         self.logfile_path.touch(exist_ok=True)
@@ -75,13 +82,43 @@ class TeisatsuCLI:
         root_logger.addHandler(stream_handler)
         root_logger.addHandler(file_handler)
         
-        return lg.getLogger('teisatsu.cli')
+        self.logger = lg.getLogger('teisatsu.cli')
     
     
-    def __find_thing(self, args: Namespace) -> None | int:
-        ...
-    
-    
+    def find_thing(self, args: Namespace) -> None | int:
+        from .plugins import TPluginManager, TClassifierManager, TScriptManager
+        from .data import TDataProcessor
+        
+        thing = args.separator.join(args.thing)
+        self.logger.debug(f'Got thing: {thing}')
+        
+        plugin_manager = TPluginManager()
+        plugins = plugin_manager.discover_plugins()
+        
+        if not plugins:
+            self.logger.error(f'No plugins found')
+            return 1
+        
+        classifier_manager = TClassifierManager(plugins['classifiers'])
+        tags = classifier_manager.classify(thing)
+        
+        if not tags:
+            self.logger.error(f'Failed to classificate: {thing}')
+            return 1
+        
+        script_manager = TScriptManager(plugins['scripts'])
+        data_processor = TDataProcessor()
+        
+        for script in script_manager.iter_scripts(tags):
+            raw_data = script_manager.run_script(script, thing)
+            data = data_processor.process(raw_data)
+            fprint(json.dumps(
+                data,
+                indent=4,
+                ensure_ascii=False
+            ))
+            
+            
     def __display_available_tags(self) -> None:
         ...
     
@@ -92,17 +129,17 @@ class TeisatsuCLI:
     
     def run(self) -> None | int:
         args = self.argparser.parse_args()
-        logger = self.__setup_logger(lg.DEBUG if args.verbose else lg.INFO)
         
-        logger.debug(f'CLI launched. Executing command: {args.command}')
+        self.setup_logger(lg.DEBUG if args.verbose else lg.INFO)
+        self.logger.debug(f'CLI launched. Executing command: {args.command}')
         
         if args.command == 'find':
-            returncode = self.__find_thing(args)
+            returncode = self.find_thing(args)
             return returncode
         
             
         elif args.command == 'list':
-            logger.debug(f'Displaying the available {args.object}')
+            self.logger.debug(f'Displaying the available {args.object}')
             if args.object == 'tags':
                 self.__display_available_tags()
                 return 0
