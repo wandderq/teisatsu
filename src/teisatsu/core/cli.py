@@ -7,6 +7,7 @@ import json
 import sys
 import os
 
+
 def fprint(s: str='', end: str='\n'):
     sys.stdout.write(str(s) + str(end))
     sys.stdout.flush()
@@ -15,8 +16,8 @@ def fprint(s: str='', end: str='\n'):
 class TeisatsuCLI:
     def __init__(self) -> None:
         self.argparser = ArgumentParser(
-            description='will find everything (almost)',
-            epilog='see https://github.com/wandderq/teisatsu'
+            description='Will find everything (almost)',
+            epilog='See https://github.com/wandderq/teisatsu'
         )
         
         subparsers = self.argparser.add_subparsers(
@@ -33,20 +34,26 @@ class TeisatsuCLI:
             '-s', '--separator',
             type=str,
             default=' ',
-            help='separator between args.things, like sep.join(thing)'
+            help='Separator between args.things, like sep.join(thing)'
         )
         find_parser.add_argument(
             '-v', '--verbose',
             action='store_true',
-            help='verbose mode'
+            help='Verbose mode'
         )
         
         # list command parser
-        list_parser = subparsers.add_parser('list', help='shows available things')
+        list_parser = subparsers.add_parser('list', help='Shows available things')
         list_parser.add_argument(
             'object',
             choices=['tags', 'scripts'],
-            help='displays the available [object]'
+            help='Displays the available [object]'
+        )
+
+        list_parser.add_argument(
+            '-m', '--more',
+            action='store_true',
+            help='Show more info'
         )
     
     
@@ -119,14 +126,48 @@ class TeisatsuCLI:
             ))
             
             
-    def __display_available_tags(self) -> None:
-        ...
+    def __display_available_tags(self, args: Namespace) -> None:
+        from .tags import Tag
+
+        if not args.more:
+            fprint('Available tags: ', end='')
+            fprint(', '.join([t.name for t in Tag]))
+            fprint(f'Total: {len(Tag)}')
+            return
+
+        else:
+            fprint('Available tags:')
+            for tag in Tag:
+                fprint(f'Name: {tag.name}, Value: {tag.value}')
+            return
     
     
-    def __display_available_scripts(self) -> None:
-        ...
-    
-    
+    def __display_available_scripts(self, args: Namespace) -> None:
+        from .plugins import TPluginManager
+
+        plugin_manager = TPluginManager()
+        plugins = plugin_manager.discover_plugins()
+        scripts = plugins['scripts']
+
+        if not args.more:
+            scripts_str = [f"{script['name']}[{','.join([t.name for t in script['tags']])}]" for script in scripts]
+            fprint(f"Available scripts: {', '.join(scripts_str)}")
+
+        else:
+            for script in scripts:
+                name = script['name']
+                tags = ','.join([t.name for t in script['tags']])
+                version = script['version']
+                description = script['description']
+                requirements = ','.join(script['requirements'])
+
+                fprint(f'Name: {name}')
+                fprint(f'Tags: {tags}')
+                fprint(f'Version: {version}')
+                fprint(f'Requirements: {requirements}')
+                fprint(f'Description:\n{description}')
+                fprint()
+
     def run(self) -> None | int:
         args = self.argparser.parse_args()
         
@@ -141,15 +182,15 @@ class TeisatsuCLI:
         elif args.command == 'list':
             self.logger.debug(f'Displaying the available {args.object}')
             if args.object == 'tags':
-                self.__display_available_tags()
+                self.__display_available_tags(args)
                 return 0
             
             if args.object == 'scripts':
-                self.__display_available_scripts()
+                self.__display_available_scripts(args)
                 return 0
 
 
 
 def launch_cli():
-    exitcode = TeisatsuCLI().run() 
+    exitcode = TeisatsuCLI().run()
     sys.exit(exitcode)

@@ -26,7 +26,7 @@ see https://github.com/wandderq/teisatsu
 ## Примеры команд
  - Простой поиск: `teisatsu find google.com`
  - Поиск с отладкой: `teisatsu find localhost -v`
- - Просмотр списка доступных скриптов: `teisatsu list scripts` (WIP)
+ - Просмотр списка доступных скриптов: `teisatsu list scripts`
 
 
 ## Принцип работы
