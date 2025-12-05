@@ -12,8 +12,5 @@ class Tag(IntEnum):
     MAC_ADDRESS    = 109
     URL            = 110
 
-# Автоматически создаем TAG2STR
 TAG2STR = {tag.value: tag.name for tag in Tag}
-
-# Также можно получить обратное отображение
 STR2TAG = {tag.name: tag.value for tag in Tag}

@@ -7,8 +7,8 @@ import socket
 
 class GetIPScript(TScriptBase):
     def __init__(self) -> None:
-        super().__init__(globals())
-        self.data = {}
+        super().__init__(TSS_SCRIPT)
+        
             
     def run(self, thing: Any) -> dict[str, Any]:
         try:
@@ -22,17 +22,11 @@ class GetIPScript(TScriptBase):
 
 
 
-# TSS - TeiSatsu Script
-TSS_NAME = 'get-ip-by-name'
-TSS_TAGS = [Tag.DOMAIN, Tag.HOSTNAME]
-TSS_VERSION = '0.1.0'
-TSS_REQUIREMENTS = []
-TSS_CLASS = GetIPScript
-
-TSS_DESCRIPTION = """
-First teisatsu script
-Finds domain or hostname's IP and returns it
-Uses socket.gethostbyname
-
-Should be used as an example script
-"""
+TSS_SCRIPT = {
+    'name': 'get-ip-by-name',
+    'tags': [Tag.DOMAIN, Tag.HOSTNAME],
+    'version': '0.2.0',
+    'requirements': None,
+    'class': GetIPScript,
+    'desc': "Uses socket.gethostbyname to find domain/hostname's IP"
+}

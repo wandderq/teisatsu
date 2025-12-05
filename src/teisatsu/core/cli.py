@@ -93,40 +93,38 @@ class TeisatsuCLI:
     
     
     def find_thing(self, args: Namespace) -> None | int:
-        from .plugins import TPluginManager, TClassifierManager, TScriptManager
-        from .data import TDataProcessor
+        from ..managers.classifier import TClassifierManager
+        from ..managers.script import TScriptManager
         
         thing = args.separator.join(args.thing)
         self.logger.debug(f'Got thing: {thing}')
         
-        plugin_manager = TPluginManager()
-        plugins = plugin_manager.discover_plugins()
-        
-        if not plugins:
-            self.logger.error(f'No plugins found')
-            return 1
-        
-        classifier_manager = TClassifierManager(plugins['classifiers'])
+        # Getting tags
+        classifier_manager = TClassifierManager()
+        classifier_manager.load_classifiers()
         tags = classifier_manager.classify(thing)
         
         if not tags:
             self.logger.error(f'Failed to classificate: {thing}')
             return 1
         
-        script_manager = TScriptManager(plugins['scripts'])
-        data_processor = TDataProcessor()
+        # running scripts
+        script_manager = TScriptManager()
+        script_manager.load_scripts()
         
-        for script in script_manager.iter_scripts(tags):
-            raw_data = script_manager.run_script(script, thing)
-            data = data_processor.process(raw_data)
+        if not script_manager.scripts:
+            self.logger.error(f'No scripts found')
+            return 1
+        
+        for results in script_manager.run_scripts(thing, tags):
             fprint(json.dumps(
-                data,
+                results,
                 indent=4,
                 ensure_ascii=False
             ))
             
             
-    def __display_available_tags(self, args: Namespace) -> None:
+    def display_available_tags(self, args: Namespace) -> None:
         from .tags import Tag
 
         if not args.more:
@@ -142,36 +140,47 @@ class TeisatsuCLI:
             return
     
     
-    def __display_available_scripts(self, args: Namespace) -> None:
-        from .plugins import TPluginManager
+    def display_available_scripts(self, args: Namespace) -> None:
+        from ..managers.script import TScriptManager
 
-        plugin_manager = TPluginManager()
-        plugins = plugin_manager.discover_plugins()
-        scripts = plugins['scripts']
+        script_manager = TScriptManager()
+        script_manager.load_scripts()
+        
+        scripts = script_manager.scripts
 
         if not args.more:
-            scripts_str = [f"{script['name']}[{','.join([t.name for t in script['tags']])}]" for script in scripts]
-            fprint(f"Available scripts: {', '.join(scripts_str)}")
+            script_strings = [
+                f"{name}[{tags}]" for name, tags in [
+                    (
+                        script['name'],
+                        ','.join([t.name for t in script['tags']])
+                    )
+                    for script in scripts
+                ]
+            ] # tf is happening here
+            
+            fprint(f"Available scripts: {', '.join(script_strings)}")
 
         else:
             for script in scripts:
                 name = script['name']
                 tags = ','.join([t.name for t in script['tags']])
                 version = script['version']
-                description = script['description']
-                requirements = ','.join(script['requirements'])
+                description = script['desc']
+                requirements = ','.join(script['requirements']) if script['requirements'] else None
 
                 fprint(f'Name: {name}')
                 fprint(f'Tags: {tags}')
                 fprint(f'Version: {version}')
                 fprint(f'Requirements: {requirements}')
-                fprint(f'Description:\n{description}')
+                fprint(f'Description: {description}')
                 fprint()
+
 
     def run(self) -> None | int:
         args = self.argparser.parse_args()
         
-        self.setup_logger(lg.DEBUG if hasattr(args, 'verbose') and args.verbose else lg.INFO)
+        self.setup_logger(lg.DEBUG if hasattr(args, 'verbose') and args.verbose else lg.WARNING)
         self.logger.debug(f'CLI launched. Executing command: {args.command}')
         
         if args.command == 'find':
@@ -182,11 +191,11 @@ class TeisatsuCLI:
         elif args.command == 'list':
             self.logger.debug(f'Displaying the available {args.object}')
             if args.object == 'tags':
-                self.__display_available_tags(args)
+                self.display_available_tags(args)
                 return 0
             
             if args.object == 'scripts':
-                self.__display_available_scripts(args)
+                self.display_available_scripts(args)
                 return 0
 
 
