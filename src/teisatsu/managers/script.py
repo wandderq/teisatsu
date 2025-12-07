@@ -88,14 +88,22 @@ class TScriptManager:
     
     
     def run_scripts(self, thing: str, tags: list[int]):
+        sent_results = {}
+        
         for script in self.scripts:
             self.logger.debug(f'Checking script: {script["name"]}')
             
             if any([tag in script['tags'] for tag in tags]):
                 
-                self.logger.info(f'Launching script: {script["name"]}')
+                self.logger.debug(f'Launching script: {script["name"]}')
                 script_object: TScriptBase = script['class']()
                 raw_results = script_object.run(thing)
                 results = self.data_processor.process(raw_results)
+                
+                for key, val in list(results.items()):
+                    if key in sent_results and sent_results[key] == val:
+                        del results[key]
+                
+                sent_results.update(results)
                 
                 yield results

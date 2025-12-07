@@ -5,7 +5,6 @@ import colorlog as clg
 import logging as lg
 import json
 import sys
-import os
 
 
 def fprint(s: str='', end: str='\n'):
@@ -117,11 +116,7 @@ class TeisatsuCLI:
             return 1
         
         for results in script_manager.run_scripts(thing, tags):
-            fprint(json.dumps(
-                results,
-                indent=4,
-                ensure_ascii=False
-            ))
+            fprint('\n'.join(f"{key}: {val}" for key, val in results.items()))
             
             
     def display_available_tags(self, args: Namespace) -> None:
