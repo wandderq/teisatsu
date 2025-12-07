@@ -1,6 +1,6 @@
 [project]
 name = "teisatsu"
-version = "1.3.0"
+version = "1.4.0"
 description = "will find everything"
 readme = "README.md"
 authors = [
@@ -18,3 +18,12 @@ build-backend = "uv_build"
 
 [project.scripts]
 teisatsu = "teisatsu.core.cli:launch_cli"
+
+
+[project.optional-dependencies]
+net = [
+    "requests",
+    "cloudscraper",
+    "fake-useragent",
+    "python-whois",
+]

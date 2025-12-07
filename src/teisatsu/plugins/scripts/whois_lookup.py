@@ -9,13 +9,14 @@ class WhoisLookupScript(TScriptBase):
         
             
     def run(self, thing: Any) -> dict[str, Any]:
-        import whois
+        self.import_requirements()
         
         try:
-            whois_data = whois.whois(thing)
+            whois_data = self.whois.whois(thing)
             self.data.update(whois_data)
         
-        except whois.parser.WhoisDomainNotFoundError as e:
+        
+        except self.whois.parser.WhoisDomainNotFoundError as e:
             self.logger.error(f'Whois error: domain not found: {str(e)}')
         
         except Exception as e:
@@ -28,8 +29,9 @@ class WhoisLookupScript(TScriptBase):
 TSS_SCRIPT = {
     'name': 'whois-lookup',
     'tags': [Tag.DOMAIN, Tag.IPV4, Tag.URL],
+    'exclude_tags': None,
     'version': '0.1.0',
-    'requirements': ['python-whois'],
+    'requirements': ['whois'],
     'class': WhoisLookupScript,
     'desc': "Uses python-whois lib to find info about domain/ip/url"
 }

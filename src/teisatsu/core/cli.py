@@ -3,13 +3,23 @@ from pathlib import Path
 
 import colorlog as clg
 import logging as lg
-import json
 import sys
+import os
 
 
 def fprint(s: str='', end: str='\n'):
     sys.stdout.write(str(s) + str(end))
     sys.stdout.flush()
+
+
+def print_header(text: str) -> None:
+    text = ' ' + text.strip() + ' '
+    text_size = len(text)
+    head_size = os.get_terminal_size().columns - text_size
+    left_size = head_size // 2
+    right_size = head_size - left_size
+    
+    fprint('-'*left_size + text + '-'*right_size)
 
 
 class TeisatsuCLI:
@@ -115,7 +125,8 @@ class TeisatsuCLI:
             self.logger.error(f'No scripts found')
             return 1
         
-        for results in script_manager.run_scripts(thing, tags):
+        for script_name, results in script_manager.run_scripts(thing, tags):
+            print_header(script_name)
             fprint('\n'.join(f"{key}: {val}" for key, val in results.items()))
             
             

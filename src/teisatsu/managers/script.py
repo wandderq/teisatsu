@@ -93,6 +93,9 @@ class TScriptManager:
         for script in self.scripts:
             self.logger.debug(f'Checking script: {script["name"]}')
             
+            if 'exclude_tags' in script and any([tag in script['exclude_tags'] for tag in tags]):
+                continue
+            
             if any([tag in script['tags'] for tag in tags]):
                 
                 self.logger.debug(f'Launching script: {script["name"]}')
@@ -106,4 +109,4 @@ class TScriptManager:
                 
                 sent_results.update(results)
                 
-                yield results
+                yield script['name'], results

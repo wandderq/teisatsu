@@ -12,7 +12,6 @@ class GetIPScript(TScriptBase):
     def run(self, thing: Any) -> dict[str, Any]:
         try:
             import socket
-            
             addr = socket.gethostbyname(thing)
             self.data['ip'] = addr
             
@@ -26,6 +25,7 @@ class GetIPScript(TScriptBase):
 TSS_SCRIPT = {
     'name': 'get-ip-by-name',
     'tags': [Tag.DOMAIN, Tag.HOSTNAME],
+    'exclude_tags': [Tag.IPV4],
     'version': '0.2.1',
     'requirements': None,
     'class': GetIPScript,

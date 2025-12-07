@@ -17,11 +17,10 @@ class IPAPIsLookupScript(TScriptBase):
             
     def run(self, thing: Any) -> dict[str, Any]:
         try:
-            import cloudscraper
-            import fake_useragent
+            self.import_requirements()
             
-            scraper = cloudscraper.create_scraper()
-            user_agent = fake_useragent.UserAgent()
+            scraper = self.cloudscraper.create_scraper()
+            user_agent = self.fake_useragent.UserAgent()
              
             for api_url in self.api_list:
                 try:
@@ -49,8 +48,9 @@ class IPAPIsLookupScript(TScriptBase):
 TSS_SCRIPT = {
     'name': 'ip-apis-lokup',
     'tags': [Tag.IPV4, Tag.IPV6],
+    'exclude_tags': None,
     'version': '0.1.0',
-    'requirements': ['requests', 'cloudscraper', 'fake-useragent'],
+    'requirements': ['requests', 'cloudscraper', 'fake_useragent'],
     'class': IPAPIsLookupScript,
     'desc': "Uses public APIs to find some info about IP"
 }
