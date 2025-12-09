@@ -1,55 +1,10 @@
 from ..core.base import TScriptError, TScriptBase
-from datetime import datetime
+from typing import Generator
+from .data import TDataProcessor
 
 import logging as lg
 import importlib
 import pkgutil
-import copy
-
-
-class TDataProcessor:
-    def __init__(self) -> None:
-        pass
-    
-    
-    def _process_list(self, data: list) -> list:
-        for i, obj in enumerate(data):
-            if isinstance(obj, dict):
-                data[i] = self._process_dict(obj)
-                continue
-    
-            if isinstance(obj, list):
-                data[i] = self._process_list(obj)
-                continue
-            
-            # processiong here
-            if isinstance(obj, datetime):
-                data[i] = obj.strftime("%d/%m/%Y, %H:%M:%S")
-        
-        return data
-    
-    
-    def _process_dict(self, data: dict) -> dict:
-        for key, value in data.items():
-            if isinstance(value, dict):
-                data[key] = self._process_dict(value)
-                continue
-            
-            if isinstance(value, list):
-                data[key] = self._process_list(value)
-                continue
-            
-            # processing here
-            if isinstance(value, datetime):
-                data[key] = value.strftime("%d/%m/%Y, %H:%M:%S")
-        
-        return data
-    
-    
-    def process(self, raw_data: dict):
-        raw_data_copy = copy.deepcopy(raw_data)
-        return self._process_dict(raw_data_copy)
-
 
 
 class TScriptManager:
@@ -57,7 +12,6 @@ class TScriptManager:
         self.logger = lg.getLogger('teisatsu.plugins.script-manager')
         self.package_path = 'teisatsu.plugins.scripts'
         self.scripts: list = []
-        self.data_processor = TDataProcessor()
     
     
     def load_scripts(self) -> None:
@@ -87,26 +41,45 @@ class TScriptManager:
             self.logger.error(f'Failed to load scripts due to error: {str(e)}')
     
     
-    def run_scripts(self, thing: str, tags: list[int]):
+    def run_scripts(self, thing: str, tags: list[int]) -> Generator[tuple[str, dict, list], None, None]:
+        data_processor = TDataProcessor()
         sent_results = {}
         
-        for script in self.scripts:
-            self.logger.debug(f'Checking script: {script["name"]}')
+        
+        scripts = [
+            script for script in self.scripts
+            if any(tag in script['tags'] for tag in tags)
+            and not (
+                ('exclude_tags' in script and script['exclude_tags'])
+                and
+                (not any(tag in script['exclude_tags'] for tag in tags))
+            )
+        ]
+        
+        # if 'exclude_tags' in script and script['exclude_tags']:
+        #     if any([tag in script['exclude_tags'] for tag in tags]):
+        #         continue
+        
+        # for script in scripts:
+            # if any([tag in script['tags'] for tag in tags]):
+        
+        
+        for script in scripts:
+            none_data = []
+            script_obj: TScriptBase = script['class']()
+            raw_results = script_obj.run(thing)
+            results = data_processor.process(raw_results)
             
-            if 'exclude_tags' in script and any([tag in script['exclude_tags'] for tag in tags]):
-                continue
             
-            if any([tag in script['tags'] for tag in tags]):
+            for key, val in list(results.items()):
+                if val is None:
+                    none_data.append(key)
+                    del results[key]
+                    continue
                 
-                self.logger.debug(f'Launching script: {script["name"]}')
-                script_object: TScriptBase = script['class']()
-                raw_results = script_object.run(thing)
-                results = self.data_processor.process(raw_results)
-                
-                for key, val in list(results.items()):
-                    if key in sent_results and sent_results[key] == val:
-                        del results[key]
-                
-                sent_results.update(results)
-                
-                yield script['name'], results
+                if key in sent_results and sent_results[key] == val:
+                    del results[key]
+                    continue
+            
+            sent_results.update(results)
+            yield (script['name'], results, none_data)

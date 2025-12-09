@@ -125,9 +125,12 @@ class TeisatsuCLI:
             self.logger.error(f'No scripts found')
             return 1
         
-        for script_name, results in script_manager.run_scripts(thing, tags):
+        for script_name, results, none_data in script_manager.run_scripts(thing, tags):
             print_header(script_name)
             fprint('\n'.join(f"{key}: {val}" for key, val in results.items()))
+            
+            if none_data:
+                fprint(f'not found: {", ".join(none_data)}')
             
             
     def display_available_tags(self, args: Namespace) -> None:
